@@ -12,7 +12,6 @@
     <DuckDbWasmBaseUrl>https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@$(DuckDbWasmVersion)/dist</DuckDbWasmBaseUrl>
     <ApacheArrowVersion>17.0.0</ApacheArrowVersion>
     <DuckDbRuntimeDirectory>$(ProjectDir)wwwroot/duckdb</DuckDbRuntimeDirectory>
-    <DuckDbArrowDirectory>$(ProjectDir)wwwroot/npm/apache-arrow@$(ApacheArrowVersion)/+esm</DuckDbArrowDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,10 +30,6 @@
     <DuckDbAsset Include="$(DuckDbWasmBaseUrl)/duckdb-browser-coi.pthread.worker.js">
       <DestinationFolder>$(DuckDbRuntimeDirectory)</DestinationFolder>
       <DestinationFileName>duckdb-browser-coi.pthread.worker.js</DestinationFileName>
-    </DuckDbAsset>
-    <DuckDbAsset Include="https://cdn.jsdelivr.net/npm/apache-arrow@$(ApacheArrowVersion)/+esm">
-      <DestinationFolder>$(DuckDbArrowDirectory)</DestinationFolder>
-      <DestinationFileName>index.mjs</DestinationFileName>
     </DuckDbAsset>
   </ItemGroup>
 
