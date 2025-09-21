@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using BlazorDuck.Web.Components;
 using BlazorDuck.Web.Configuration;
 using BlazorDuck.Web.Services;
@@ -18,12 +17,17 @@ var app = builder.Build();
 
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.Value?.EndsWith(".wasm", StringComparison.OrdinalIgnoreCase) == true)
+    var requestPath = context.Request.Path.Value;
+    if (requestPath?.EndsWith(".wasm", StringComparison.OrdinalIgnoreCase) == true &&
+        requestPath.StartsWith("/duckdb/", StringComparison.OrdinalIgnoreCase))
     {
         context.Response.OnStarting(() =>
         {
-            context.Response.Headers.CacheControl = "public,max-age=86400,immutable";
-            context.Response.Headers.Expires = DateTime.UtcNow.AddDays(1).ToString("R", CultureInfo.InvariantCulture);
+            var headers = context.Response.Headers;
+            headers.Remove("Cache-Control");
+            headers.Remove("Pragma");
+            headers.Remove("Expires");
+            // headers.CacheControl = "public,max-age=86400,immutable";
             return Task.CompletedTask;
         });
     }
