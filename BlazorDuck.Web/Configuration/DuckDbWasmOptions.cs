@@ -10,5 +10,5 @@ public sealed class DuckDbWasmOptions
 
     public string MainWorker { get; set; } = "duckdb-browser-eh.worker.js";
 
-    public string ModuleLoader { get; set; } = "duckdb-browser.mjs";
+    public string ModuleLoader { get; set; } = "duckdb-browser-bundle.js";
 }
