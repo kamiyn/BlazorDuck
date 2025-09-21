@@ -6,7 +6,7 @@ export default defineConfig({
     outDir: resolve(__dirname, '../BlazorDuck.Web/wwwroot/duckdb'),
     emptyOutDir: false,
     lib: {
-      entry: resolve(__dirname, 'src/index.js'),
+      entry: resolve(__dirname, 'src/index.ts'),
       formats: ['es'],
       fileName: () => 'duckdb-browser-bundle.js'
     },

@@ -13,20 +13,64 @@ const {
   selectBundle
 } = duckdb;
 
-const state = {
-  duckDbPromise: null,
+type DuckDbLoaderModule = Pick<typeof duckdb, 'ConsoleLogger' | 'AsyncDuckDB'>;
+
+type DuckDbConnection = duckdb.AsyncDuckDBConnection;
+
+type AsyncQueryResult = Awaited<ReturnType<DuckDbConnection['query']>>;
+
+type QueryRows = ReturnType<AsyncQueryResult['toArray']>;
+
+type QueryRow = QueryRows extends ReadonlyArray<infer TRow>
+  ? TRow extends Record<string, unknown>
+    ? TRow
+    : Record<string, unknown>
+  : Record<string, unknown>;
+
+interface LoadedDuckDb {
+  readonly loader: DuckDbLoaderModule;
+  readonly db: duckdb.AsyncDuckDB;
+  readonly worker: Worker;
+}
+
+interface DuckDbState {
+  duckDbPromise?: Promise<LoadedDuckDb>;
+  httpFsInitialized: boolean;
+}
+
+export interface DuckDbBundleConfig {
+  readonly bundleBasePath: string;
+  readonly moduleLoader: string;
+  readonly mainWorker: string;
+  readonly mainModule: string;
+  readonly pthreadWorker?: string | null;
+}
+
+export interface ExecuteQueryRow {
+  readonly values: ReadonlyArray<string>;
+}
+
+export interface ExecuteQueryResult {
+  readonly columns: ReadonlyArray<string>;
+  readonly rows: ReadonlyArray<ExecuteQueryRow>;
+}
+
+const state: DuckDbState = {
+  duckDbPromise: undefined,
   httpFsInitialized: false
 };
 
-async function loadDuckDb(config) {
-  if (!state.duckDbPromise) {
-    state.duckDbPromise = (async () => {
+async function loadDuckDb(config: DuckDbBundleConfig): Promise<LoadedDuckDb> {
+  let promise = state.duckDbPromise;
+
+  if (!promise) {
+    promise = (async () => {
       if (!config) {
         throw new Error('DuckDB configuration is required.');
       }
 
       const moduleLoaderPath = `${config.bundleBasePath}/${config.moduleLoader}`;
-      const loader = await import(/* @vite-ignore */ moduleLoaderPath);
+      const loader = (await import(/* @vite-ignore */ moduleLoaderPath)) as DuckDbLoaderModule;
       const workerPath = `${config.bundleBasePath}/${config.mainWorker}`;
       const worker = new Worker(workerPath, { type: 'module' });
       const logger = new loader.ConsoleLogger();
@@ -37,22 +81,27 @@ async function loadDuckDb(config) {
         : null;
 
       await db.instantiate(mainModuleUrl, pthreadWorkerUrl);
-      return { loader, db, worker };
+      return { loader, db, worker } satisfies LoadedDuckDb;
     })();
+
+    state.duckDbPromise = promise;
   }
 
-  return state.duckDbPromise;
+  return promise;
 }
 
-async function ensureHttpFs(connection) {
+async function ensureHttpFs(connection: duckdb.AsyncDuckDBConnection): Promise<void> {
   if (state.httpFsInitialized) {
     return;
   }
 
   try {
     await connection.query("INSTALL 'httpfs';");
-  } catch (error) {
-    const message = typeof error?.message === 'string' ? error.message : String(error ?? '');
+  } catch (error: unknown) {
+    const errorWithMessage = error as { message?: unknown };
+    const message = typeof errorWithMessage?.message === 'string'
+      ? errorWithMessage.message
+      : String(error ?? '');
     if (!message.includes('already installed')) {
       throw error;
     }
@@ -62,7 +111,7 @@ async function ensureHttpFs(connection) {
   state.httpFsInitialized = true;
 }
 
-function toDisplayValue(value) {
+function toDisplayValue(value: unknown): string {
   if (value === null || value === undefined) {
     return '';
   }
@@ -71,10 +120,10 @@ function toDisplayValue(value) {
     return JSON.stringify(value);
   }
 
-  return `${value}`;
+  return String(value);
 }
 
-function resolveParquetUrl(parquetUrl) {
+function resolveParquetUrl(parquetUrl: string): string {
   if (!parquetUrl) {
     return parquetUrl;
   }
@@ -90,7 +139,11 @@ function resolveParquetUrl(parquetUrl) {
   return new URL(parquetUrl, baseUrl).toString();
 }
 
-export async function executeQuery(config, parquetUrl, sql) {
+export async function executeQuery(
+  config: DuckDbBundleConfig,
+  parquetUrl: string,
+  sql: string
+): Promise<ExecuteQueryResult> {
   if (!config) {
     throw new Error('DuckDB configuration is required.');
   }
@@ -110,11 +163,16 @@ export async function executeQuery(config, parquetUrl, sql) {
     try {
       await connection.query(`CREATE OR REPLACE TEMP VIEW parquet_source AS SELECT * FROM read_parquet(${sourceLiteral});`);
       const result = await connection.query(sql);
-      const columns = Array.isArray(result?.schema?.fields)
-        ? result.schema.fields.map(field => field.name ?? '').filter(name => Boolean(name))
+      const schemaFields = Array.isArray(result?.schema?.fields)
+        ? result.schema.fields
         : [];
+      const columns = schemaFields
+        .map((field) => field?.name ?? '')
+        .filter((name): name is string => Boolean(name));
 
-      const rowValues = result.toArray().map(row => columns.map(column => toDisplayValue(row[column])));
+      const rowValues: ReadonlyArray<ReadonlyArray<string>> = result
+        .toArray()
+        .map((row: QueryRow) => columns.map((column) => toDisplayValue(row[column])));
 
       if (typeof result.close === 'function') {
         result.close();
@@ -122,10 +180,12 @@ export async function executeQuery(config, parquetUrl, sql) {
         result.release();
       }
 
+      const rows = rowValues.map<ExecuteQueryRow>((values) => ({ values }));
+
       return {
         columns,
-        rows: rowValues.map(values => ({ values }))
-      };
+        rows
+      } satisfies ExecuteQueryResult;
     } finally {
       await connection.query('DROP VIEW IF EXISTS parquet_source;');
     }
