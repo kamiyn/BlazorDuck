@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using BlazorDuck.Web.Components;
 using BlazorDuck.Web.Configuration;
 using BlazorDuck.Web.Services;
@@ -13,6 +15,22 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.Value?.EndsWith(".wasm", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        context.Response.OnStarting(() =>
+        {
+            context.Response.Headers.CacheControl = "public,max-age=86400,immutable";
+            context.Response.Headers.Expires = DateTime.UtcNow.AddDays(1).ToString("R", CultureInfo.InvariantCulture);
+            return Task.CompletedTask;
+        });
+    }
+
+    await next();
+});
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
