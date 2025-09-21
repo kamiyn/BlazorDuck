@@ -2,6 +2,8 @@
 
 プロンプトに書かれた内容、および、処理内容 を Markdown 形式 ./codinglog/Gpt<yyyyMMddHHmm>.md ファイルへ記録してください
 
+- dotnet run --project BlazorDuck.Web/BlazorDuck.Web.csproj による起動を行い ビルド および 実行時エラーを検出
+
 ## Important Notes
 
 - do not use 'sudo' command
