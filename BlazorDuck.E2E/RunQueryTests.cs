@@ -45,20 +45,20 @@ public sealed class E2EFixture : IAsyncLifetime
 
         _process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start Blazor app process.");
 
-        await WaitForAppAsync(BaseUrl, TimeSpan.FromSeconds(45)).ConfigureAwait(false);
+        await WaitForAppAsync(BaseUrl, TimeSpan.FromSeconds(45));
 
-        PlaywrightInstance = await Microsoft.Playwright.Playwright.CreateAsync().ConfigureAwait(false);
+        PlaywrightInstance = await Microsoft.Playwright.Playwright.CreateAsync();
         Browser = await PlaywrightInstance.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = true
-        }).ConfigureAwait(false);
+        });
     }
 
     public async Task DisposeAsync()
     {
         if (Browser is not null)
         {
-            await Browser.CloseAsync().ConfigureAwait(false);
+            await Browser.CloseAsync();
         }
 
         PlaywrightInstance?.Dispose();
@@ -104,7 +104,7 @@ public sealed class E2EFixture : IAsyncLifetime
         {
             try
             {
-                var response = await httpClient.GetAsync(baseUrl).ConfigureAwait(false);
+                var response = await httpClient.GetAsync(baseUrl);
                 if (response.IsSuccessStatusCode)
                 {
                     return;
@@ -115,7 +115,7 @@ public sealed class E2EFixture : IAsyncLifetime
                 // Swallow connection errors while waiting for startup.
             }
 
-            await Task.Delay(500).ConfigureAwait(false);
+            await Task.Delay(500);
         }
 
         throw new TimeoutException($"The Blazor application did not start within {timeout.TotalSeconds} seconds.");
@@ -140,37 +140,37 @@ public sealed class RunQueryTests
             throw new InvalidOperationException("Playwright browser was not initialized.");
         }
 
-        var context = await _fixture.Browser.NewContextAsync().ConfigureAwait(false);
-        var page = await context.NewPageAsync().ConfigureAwait(false);
+        var context = await _fixture.Browser.NewContextAsync();
+        var page = await context.NewPageAsync();
 
         try
         {
             await page.GotoAsync(_fixture.BaseUrl + "/", new PageGotoOptions
             {
                 WaitUntil = WaitUntilState.NetworkIdle
-            }).ConfigureAwait(false);
+            });
 
             var runButton = page.GetByRole(AriaRole.Button, new() { Name = "Run query" });
             await runButton.WaitForAsync(new LocatorWaitForOptions
             {
                 State = WaitForSelectorState.Visible
-            }).ConfigureAwait(false);
+            });
 
-            await runButton.ClickAsync().ConfigureAwait(false);
+            await runButton.ClickAsync();
 
             var dataRows = page.Locator("table tbody tr");
             await dataRows.First.WaitForAsync(new LocatorWaitForOptions
             {
                 State = WaitForSelectorState.Visible
-            }).ConfigureAwait(false);
+            });
 
-            var rowCount = await dataRows.CountAsync().ConfigureAwait(false);
+            var rowCount = await dataRows.CountAsync();
             Assert.True(rowCount > 0, "Expected at least one result row after running the query.");
         }
         finally
         {
-            await page.CloseAsync().ConfigureAwait(false);
-            await context.CloseAsync().ConfigureAwait(false);
+            await page.CloseAsync();
+            await context.CloseAsync();
         }
     }
 }
