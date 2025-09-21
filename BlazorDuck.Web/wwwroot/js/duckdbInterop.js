@@ -69,7 +69,11 @@ export async function executeQuery(config, parquetUrl, sql) {
 
     try {
         await ensureHttpFs(connection);
-        const sourceLiteral = JSON.stringify(parquetUrl);
+        const baseUrl = typeof window === 'object' && window.location ? window.location.origin : globalThis.location?.origin ?? '';
+        const resolvedParquetUrl = parquetUrl.startsWith('http://') || parquetUrl.startsWith('https://')
+            ? parquetUrl
+            : new URL(parquetUrl, baseUrl).toString();
+        const sourceLiteral = JSON.stringify(resolvedParquetUrl);
         try {
             await connection.query(`CREATE OR REPLACE TEMP VIEW parquet_source AS SELECT * FROM read_parquet(${sourceLiteral});`);
             const result = await connection.query(sql);
