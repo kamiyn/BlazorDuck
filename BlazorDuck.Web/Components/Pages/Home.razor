@@ -40,7 +40,7 @@ else
 
     <div class="mt-3 d-flex gap-2">
         <button id="runQueryButton" class="btn btn-primary" @onclick="RunQueryAsync" disabled="@_isExecuting">
-            @_isExecuting ? "Running..." : "Run query"
+            @(_isExecuting ? "Running..." : "Run query")
         </button>
         <button class="btn btn-outline-secondary" @onclick="ResetQuery" disabled="@_isExecuting">
             Reset
