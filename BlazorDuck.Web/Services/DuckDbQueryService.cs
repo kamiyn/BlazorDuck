@@ -39,7 +39,7 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
         }
 
         var config = _options.Value;
-        var module = await _moduleTask.Value.ConfigureAwait(false);
+        var module = await _moduleTask.Value;
         var rawResult = await module.InvokeAsync<DuckDbRawQueryResult>(
             "executeQuery",
             cancellationToken,
@@ -52,7 +52,7 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
                 moduleLoader = config.ModuleLoader,
             },
             parquetUrl,
-            sql).ConfigureAwait(false);
+            sql);
 
         return rawResult.ToResult();
     }
@@ -61,8 +61,8 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
     {
         if (_moduleTask.IsValueCreated)
         {
-            var module = await _moduleTask.Value.ConfigureAwait(false);
-            await module.DisposeAsync().ConfigureAwait(false);
+            var module = await _moduleTask.Value;
+            await module.DisposeAsync();
         }
     }
 }
