@@ -48,7 +48,7 @@ BlazorDuck is a .NET 10 Blazor Server application that lets you explore Parquet 
   ```bash
   cd BlazorDuck.E2E
   pwsh bin/Debug/net10.0/playwright.ps1 install
-  pwsh bin/Debug/net10.0/playwright.ps1 install-deps
+  sudo pwsh bin/Debug/net10.0/playwright.ps1 install-deps
   dotnet test
   ```
   The Playwright bootstrap scripts download driver binaries and (on Linux) add the required system dependencies. Adjust the `install-deps` invocation to match your environment if elevated privileges are restricted.
