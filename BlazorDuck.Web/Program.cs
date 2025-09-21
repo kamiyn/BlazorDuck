@@ -27,7 +27,7 @@ app.Use(async (context, next) =>
             headers.Remove("Cache-Control");
             headers.Remove("Pragma");
             headers.Remove("Expires");
-            // headers.CacheControl = "public,max-age=86400,immutable";
+            headers.CacheControl = "public,max-age=86400,immutable";
             return Task.CompletedTask;
         });
     }
