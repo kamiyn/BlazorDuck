@@ -12,10 +12,15 @@ async function loadDuckDb(config) {
             const worker = new Worker(workerPath, { type: 'module' });
             const logger = new loader.ConsoleLogger();
             const db = new loader.AsyncDuckDB(logger, worker);
-            await db.instantiate({
+            const instantiateOptions = {
                 mainModule: `${config.bundleBasePath}/${config.mainModule}`,
-                pthreadWorker: `${config.bundleBasePath}/${config.pthreadWorker}`,
-            });
+            };
+
+            if (config.pthreadWorker) {
+                instantiateOptions.pthreadWorker = `${config.bundleBasePath}/${config.pthreadWorker}`;
+            }
+
+            await db.instantiate(instantiateOptions);
             return { loader, db, worker };
         })();
     }
@@ -75,7 +80,12 @@ export async function executeQuery(config, parquetUrl, sql) {
                 ? result.schema.fields.map(field => field.name ?? '').filter(name => name)
                 : [];
             const rows = result.toArray().map(row => columns.map(column => toDisplayValue(row[column])));
-            result.release();
+
+            if (typeof result.close === 'function') {
+                result.close();
+            } else if (typeof result.release === 'function') {
+                result.release();
+            }
 
             return {
                 columns,

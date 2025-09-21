@@ -1,7 +1,10 @@
-Place the DuckDB WASM bundle files in this directory. The application expects the following files to be present:
+DuckDB WASM assets are downloaded automatically during the build via MSBuild.
+If the build machine has no network access, download the files manually from
+https://github.com/duckdb/duckdb-wasm/releases (matching version 1.29.0) and
+place them in this directory:
 - duckdb-browser.mjs
-- duckdb-browser.worker.js
-- duckdb.worker.js
-- duckdb.wasm
+- duckdb-eh.wasm
+- duckdb-browser-eh.worker.js
+- duckdb-browser-coi.pthread.worker.js
 
-You can download them from the DuckDB WASM release matching your target platform.
+Set the `NoDuckDbDownload` MSBuild property to `true` to skip automatic downloads.

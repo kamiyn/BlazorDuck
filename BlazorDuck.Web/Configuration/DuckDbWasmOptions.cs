@@ -4,11 +4,11 @@ public sealed class DuckDbWasmOptions
 {
     public string BundleBasePath { get; set; } = "/duckdb";
 
-    public string MainModule { get; set; } = "duckdb.wasm";
+    public string MainModule { get; set; } = "duckdb-eh.wasm";
 
-    public string PthreadWorker { get; set; } = "duckdb.worker.js";
+    public string PthreadWorker { get; set; } = "duckdb-browser-coi.pthread.worker.js";
 
-    public string MainWorker { get; set; } = "duckdb-browser.worker.js";
+    public string MainWorker { get; set; } = "duckdb-browser-eh.worker.js";
 
     public string ModuleLoader { get; set; } = "duckdb-browser.mjs";
 }
