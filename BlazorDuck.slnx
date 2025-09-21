@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="BlazorDuck.E2E/BlazorDuck.E2E.csproj" />
+  <Project Path="BlazorDuck.UnitTests/BlazorDuck.UnitTests.csproj" />
+  <Project Path="BlazorDuck.Web/BlazorDuck.Web.csproj" />
+</Solution>

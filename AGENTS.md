@@ -16,6 +16,8 @@
 
 This is a .NET 10.0 Blazor application that analyzes Parquet files.
 
+UnitTest with Xunit
+
 ## Architecture
 
 Blazor Server application with DuckDB for querying Parquet files.
@@ -35,6 +37,21 @@ future plan: Parquet files will be retrieved from S3 storage.
 ## Development Commands
 
 ### Build
+
 ```bash
 dotnet build
+```
+
+### Test
+
+prepare
+
+``` bash
+cd BlazorDuck.E2E
+pwsh bin/Debug/net10.0/playwright.ps1  install
+sudo pwsh bin/Debug/net10.0/playwright.ps1 install-deps
+```
+
+```bash
+dotnet test
 ```

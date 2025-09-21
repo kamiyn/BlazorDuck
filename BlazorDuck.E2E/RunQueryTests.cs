@@ -1,0 +1,176 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Threading.Tasks;
+using Microsoft.Playwright;
+using Xunit;
+
+namespace BlazorDuck.E2E;
+
+[CollectionDefinition(E2ECollection.Name)]
+public sealed class E2ECollection : ICollectionFixture<E2EFixture>
+{
+    public const string Name = "BlazorDuck.E2E";
+}
+
+public sealed class E2EFixture : IAsyncLifetime
+{
+    private Process? _process;
+
+    public string BaseUrl { get; private set; } = string.Empty;
+
+    public IPlaywright? PlaywrightInstance { get; private set; }
+
+    public IBrowser? Browser { get; private set; }
+
+    public async Task InitializeAsync()
+    {
+        var port = GetFreeTcpPort();
+        BaseUrl = $"http://127.0.0.1:{port}";
+        var solutionDirectory = GetSolutionDirectory();
+        var projectPath = Path.Combine(solutionDirectory, "BlazorDuck.Web", "BlazorDuck.Web.csproj");
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = $"run --no-build --project \"{projectPath}\" --urls {BaseUrl}",
+            WorkingDirectory = solutionDirectory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        _process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start Blazor app process.");
+
+        await WaitForAppAsync(BaseUrl, TimeSpan.FromSeconds(45)).ConfigureAwait(false);
+
+        PlaywrightInstance = await Microsoft.Playwright.Playwright.CreateAsync().ConfigureAwait(false);
+        Browser = await PlaywrightInstance.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Headless = true
+        }).ConfigureAwait(false);
+    }
+
+    public async Task DisposeAsync()
+    {
+        if (Browser is not null)
+        {
+            await Browser.CloseAsync().ConfigureAwait(false);
+        }
+
+        PlaywrightInstance?.Dispose();
+
+        if (_process is { HasExited: false })
+        {
+            try
+            {
+                _process.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Ignore failures while tearing down the hosted app.
+            }
+
+            _process.WaitForExit();
+        }
+
+        _process?.Dispose();
+    }
+
+    private static int GetFreeTcpPort()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
+    }
+
+    private static string GetSolutionDirectory()
+    {
+        var assemblyDirectory = AppContext.BaseDirectory;
+        return Path.GetFullPath(Path.Combine(assemblyDirectory, "..", "..", "..", ".."));
+    }
+
+    private static async Task WaitForAppAsync(string baseUrl, TimeSpan timeout)
+    {
+        using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+        var deadline = DateTime.UtcNow + timeout;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                var response = await httpClient.GetAsync(baseUrl).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    return;
+                }
+            }
+            catch
+            {
+                // Swallow connection errors while waiting for startup.
+            }
+
+            await Task.Delay(500).ConfigureAwait(false);
+        }
+
+        throw new TimeoutException($"The Blazor application did not start within {timeout.TotalSeconds} seconds.");
+    }
+}
+
+[Collection(E2ECollection.Name)]
+public sealed class RunQueryTests
+{
+    private readonly E2EFixture _fixture;
+
+    public RunQueryTests(E2EFixture fixture)
+    {
+        _fixture = fixture;
+    }
+
+    [Fact]
+    public async Task RunQueryDisplaysResults()
+    {
+        if (_fixture.Browser is null)
+        {
+            throw new InvalidOperationException("Playwright browser was not initialized.");
+        }
+
+        var context = await _fixture.Browser.NewContextAsync().ConfigureAwait(false);
+        var page = await context.NewPageAsync().ConfigureAwait(false);
+
+        try
+        {
+            await page.GotoAsync(_fixture.BaseUrl + "/", new PageGotoOptions
+            {
+                WaitUntil = WaitUntilState.NetworkIdle
+            }).ConfigureAwait(false);
+
+            var runButton = page.GetByRole(AriaRole.Button, new() { Name = "Run query" });
+            await runButton.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible
+            }).ConfigureAwait(false);
+
+            await runButton.ClickAsync().ConfigureAwait(false);
+
+            var dataRows = page.Locator("table tbody tr");
+            await dataRows.First.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible
+            }).ConfigureAwait(false);
+
+            var rowCount = await dataRows.CountAsync().ConfigureAwait(false);
+            Assert.True(rowCount > 0, "Expected at least one result row after running the query.");
+        }
+        finally
+        {
+            await page.CloseAsync().ConfigureAwait(false);
+            await context.CloseAsync().ConfigureAwait(false);
+        }
+    }
+}
