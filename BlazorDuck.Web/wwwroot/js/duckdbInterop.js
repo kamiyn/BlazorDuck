@@ -12,15 +12,12 @@ async function loadDuckDb(config) {
             const worker = new Worker(workerPath, { type: 'module' });
             const logger = new loader.ConsoleLogger();
             const db = new loader.AsyncDuckDB(logger, worker);
-            const instantiateOptions = {
-                mainModule: `${config.bundleBasePath}/${config.mainModule}`,
-            };
+            const mainModuleUrl = `${config.bundleBasePath}/${config.mainModule}`;
+            const pthreadWorkerUrl = config.pthreadWorker
+                ? `${config.bundleBasePath}/${config.pthreadWorker}`
+                : null;
 
-            if (config.pthreadWorker) {
-                instantiateOptions.pthreadWorker = `${config.bundleBasePath}/${config.pthreadWorker}`;
-            }
-
-            await db.instantiate(instantiateOptions);
+            await db.instantiate(mainModuleUrl, pthreadWorkerUrl);
             return { loader, db, worker };
         })();
     }
