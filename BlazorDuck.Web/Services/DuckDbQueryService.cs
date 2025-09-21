@@ -23,7 +23,7 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
     {
         _jsRuntime = jsRuntime;
         _options = options;
-        _moduleTask = new(() => _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/duckdbInterop.js").AsTask());
+        _moduleTask = new(() => _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./duckdb/duckdb-browser-bundle.js").AsTask());
     }
 
     public async ValueTask<DuckDbQueryResult> ExecuteAsync(string parquetUrl, string sql, CancellationToken cancellationToken = default)
