@@ -10,10 +10,16 @@ export default defineConfig({
       formats: ['es'],
       fileName: () => 'duckdb-browser-bundle.js'
     },
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: undefined
       }
     }
+  },
+  esbuild: {
+    minifyIdentifiers: true,
+    minifySyntax: true,
+    minifyWhitespace: true
   }
 });
