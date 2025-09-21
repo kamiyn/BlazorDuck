@@ -47,4 +47,3 @@ app.db-wal
 BlazorDuck.Web/wwwroot/duckdb/*
 !BlazorDuck.Web/wwwroot/duckdb/duckdb-browser-bundle.js
 !BlazorDuck.Web/wwwroot/duckdb/README.txt
-BlazorDuck.Web/wwwroot/npm
