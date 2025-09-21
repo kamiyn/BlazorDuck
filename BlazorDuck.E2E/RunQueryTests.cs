@@ -150,11 +150,14 @@ public sealed class RunQueryTests
                 WaitUntil = WaitUntilState.NetworkIdle
             });
 
-            var runButton = page.GetByRole(AriaRole.Button, new() { Name = "Run query" });
+            var runButton = page.Locator("#runQueryButton");
             await runButton.WaitForAsync(new LocatorWaitForOptions
             {
                 State = WaitForSelectorState.Visible
             });
+
+            var buttonText = (await runButton.InnerTextAsync()).Trim();
+            Assert.Equal("Run query", buttonText);
 
             await runButton.ClickAsync();
 
