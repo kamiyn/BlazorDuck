@@ -1,17 +1,13 @@
+import Handlebars, { TemplateDelegate } from 'handlebars';
 import * as duckdb from '@duckdb/duckdb-wasm';
 import * as arrow from 'apache-arrow';
 
-const {
-  AsyncDuckDB,
-  AsyncDuckDBConnection,
-  AsyncDuckDBPreparedStatement,
-  AsyncDuckDBTable,
-  ConsoleLogger,
-  FilesystemTable,
-  duckdbBundle,
-  duckdbBundles,
-  selectBundle
-} = duckdb;
+// const {
+//   AsyncDuckDB,
+//   AsyncDuckDBConnection,
+//   ConsoleLogger,
+//   selectBundle
+// } = duckdb;
 
 type DuckDbLoaderModule = Pick<typeof duckdb, 'ConsoleLogger' | 'AsyncDuckDB'>;
 
@@ -59,6 +55,17 @@ const state: DuckDbState = {
   duckDbPromise: undefined,
   httpFsInitialized: false
 };
+
+interface QueryRenderContext {
+  readonly columns: ReadonlyArray<string>;
+  readonly rows: ReadonlyArray<ExecuteQueryRow>;
+  readonly hasColumns: boolean;
+  readonly hasRows: boolean;
+  readonly columnCount: number;
+  readonly rowCount: number;
+}
+
+const templateCache = new WeakMap<Element, TemplateDelegate<QueryRenderContext>>();
 
 async function loadDuckDb(config: DuckDbBundleConfig): Promise<LoadedDuckDb> {
   let promise = state.duckDbPromise;
@@ -139,11 +146,51 @@ function resolveParquetUrl(parquetUrl: string): string {
   return new URL(parquetUrl, baseUrl).toString();
 }
 
+function ensureElement<TElement extends Element>(element: TElement | null | undefined, name: string): TElement {
+  if (!element) {
+    throw new Error(`${name} element is required.`);
+  }
+
+  return element;
+}
+
+function extractTemplateMarkup(element: Element): string {
+  if (element instanceof HTMLTemplateElement) {
+    return element.innerHTML;
+  }
+
+  return element.innerHTML;
+}
+
+function getTemplateDelegate(templateElement: Element): TemplateDelegate<QueryRenderContext> {
+  const cached = templateCache.get(templateElement);
+  if (cached) {
+    return cached;
+  }
+
+  const markup = extractTemplateMarkup(templateElement);
+  const compiled = Handlebars.compile<QueryRenderContext>(markup.trim());
+  templateCache.set(templateElement, compiled);
+  return compiled;
+}
+
+function renderQueryResultWithTemplate(
+  templateElement: Element,
+  targetElement: Element,
+  context: QueryRenderContext
+): void {
+  const template = getTemplateDelegate(templateElement);
+  const renderedHtml = template(context);
+  targetElement.innerHTML = renderedHtml;
+}
+
 export async function executeQuery(
   config: DuckDbBundleConfig,
   parquetUrl: string,
-  sql: string
-): Promise<ExecuteQueryResult> {
+  sql: string,
+  templateElement: Element,
+  targetElement: Element
+): Promise<void> {
   if (!config) {
     throw new Error('DuckDB configuration is required.');
   }
@@ -151,6 +198,9 @@ export async function executeQuery(
   if (!parquetUrl) {
     throw new Error('A parquet URL must be provided.');
   }
+
+  const resolvedTemplate = ensureElement(templateElement, 'Template');
+  const resolvedTarget = ensureElement(targetElement, 'Target container');
 
   const { db } = await loadDuckDb(config);
   const connection = await db.connect();
@@ -174,38 +224,52 @@ export async function executeQuery(
         .toArray()
         .map((row: QueryRow) => columns.map((column) => toDisplayValue(row[column])));
 
-      if (typeof result.close === 'function') {
-        result.close();
-      } else if (typeof result.release === 'function') {
-        result.release();
-      }
+      closeArrowTable(result);
 
       const rows = rowValues.map<ExecuteQueryRow>((values) => ({ values }));
 
-      return {
+      const context: QueryRenderContext = {
         columns,
-        rows
-      } satisfies ExecuteQueryResult;
+        rows,
+        hasColumns: columns.length > 0,
+        hasRows: rows.length > 0,
+        columnCount: columns.length,
+        rowCount: rows.length
+      };
+
+      renderQueryResultWithTemplate(resolvedTemplate, resolvedTarget, context);
+
+      return;
     } finally {
       await connection.query('DROP VIEW IF EXISTS parquet_source;');
     }
   } finally {
     await connection.close();
   }
+
+  function closeArrowTable(result: any) {
+    if (typeof result.close === 'function') {
+      result.close();
+    } else if (typeof result.release === 'function') {
+      result.release();
+    }
+  }
 }
 
-export {
-  AsyncDuckDB,
-  AsyncDuckDBConnection,
-  AsyncDuckDBPreparedStatement,
-  AsyncDuckDBTable,
-  ConsoleLogger,
-  FilesystemTable,
-  arrow,
-  duckdbBundle,
-  duckdbBundles,
-  loadDuckDb,
-  selectBundle
-};
+export function clearResults(targetElement: Element | null | undefined): void {
+  if (!targetElement) {
+    return;
+  }
 
-export * from '@duckdb/duckdb-wasm';
+  (targetElement as HTMLElement).innerHTML = '';
+}
+
+// export {
+//   AsyncDuckDB,
+//   AsyncDuckDBConnection,
+//   ConsoleLogger,
+//   loadDuckDb,
+//   selectBundle
+// };
+
+// export * from '@duckdb/duckdb-wasm';

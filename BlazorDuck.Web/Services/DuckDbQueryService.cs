@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BlazorDuck.Web.Configuration;
-using BlazorDuck.Web.Models;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using Microsoft.JSInterop;
 
@@ -10,7 +10,14 @@ namespace BlazorDuck.Web.Services;
 
 public interface IDuckDbQueryService : IAsyncDisposable
 {
-    ValueTask<DuckDbQueryResult> ExecuteAsync(string parquetUrl, string sql, CancellationToken cancellationToken = default);
+    ValueTask ExecuteAsync(
+        string parquetUrl,
+        string sql,
+        ElementReference templateElement,
+        ElementReference targetElement,
+        CancellationToken cancellationToken = default);
+
+    ValueTask ClearResultsAsync(ElementReference targetElement, CancellationToken cancellationToken = default);
 }
 
 public sealed class DuckDbQueryService : IDuckDbQueryService
@@ -26,7 +33,12 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
         _moduleTask = new(() => _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./duckdb/duckdb-browser-bundle.js").AsTask());
     }
 
-    public async ValueTask<DuckDbQueryResult> ExecuteAsync(string parquetUrl, string sql, CancellationToken cancellationToken = default)
+    public async ValueTask ExecuteAsync(
+        string parquetUrl,
+        string sql,
+        ElementReference templateElement,
+        ElementReference targetElement,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(parquetUrl))
         {
@@ -40,7 +52,7 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
 
         var config = _options.Value;
         var module = await _moduleTask.Value;
-        var rawResult = await module.InvokeAsync<DuckDbRawQueryResult>(
+        await module.InvokeVoidAsync(
             "executeQuery",
             cancellationToken,
             new
@@ -52,9 +64,15 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
                 moduleLoader = config.ModuleLoader,
             },
             parquetUrl,
-            sql);
+            sql,
+            templateElement,
+            targetElement);
+    }
 
-        return rawResult.ToResult();
+    public async ValueTask ClearResultsAsync(ElementReference targetElement, CancellationToken cancellationToken = default)
+    {
+        var module = await _moduleTask.Value;
+        await module.InvokeVoidAsync("clearResults", cancellationToken, targetElement);
     }
 
     public async ValueTask DisposeAsync()
