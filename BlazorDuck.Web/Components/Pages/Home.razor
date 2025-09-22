@@ -52,37 +52,6 @@ else
         <div class="alert alert-danger mt-3" role="alert">@_errorMessage</div>
     }
 
-    <template id="queryResultsTemplate" @ref="_resultsTemplate">
-        {{#if hasColumns}}
-            <table class="table table-striped table-sm align-middle">
-                <thead>
-                    <tr>
-                        {{#each columns}}
-                            <th scope="col">{{this}}</th>
-                        {{/each}}
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#if hasRows}}
-                        {{#each rows}}
-                            <tr>
-                                {{#each values}}
-                                    <td class="text-nowrap">{{this}}</td>
-                                {{/each}}
-                            </tr>
-                        {{/each}}
-                    {{else}}
-                        <tr>
-                            <td class="text-muted" colspan="{{columnCount}}">No rows returned.</td>
-                        </tr>
-                    {{/if}}
-                </tbody>
-            </table>
-        {{else}}
-            <div class="alert alert-info" role="status">No result columns were produced.</div>
-        {{/if}}
-    </template>
-
     <div class="table-responsive mt-4" @ref="_resultsHost"></div>
 }
 
@@ -92,7 +61,6 @@ else
     private string _sql = "SELECT * FROM parquet_source LIMIT 10;";
     private bool _isExecuting;
     private string? _errorMessage;
-    private ElementReference _resultsTemplate;
     private ElementReference _resultsHost;
 
     protected override async Task OnInitializedAsync()
@@ -124,7 +92,7 @@ else
 
         try
         {
-            await DuckDbQuery.ExecuteAsync(_selectedFile, _sql, _resultsTemplate, _resultsHost);
+            await DuckDbQuery.ExecuteAsync(_selectedFile, _sql, _resultsHost);
         }
         catch (Exception ex)
         {

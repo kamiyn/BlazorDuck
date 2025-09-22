@@ -13,7 +13,6 @@ public interface IDuckDbQueryService : IAsyncDisposable
     ValueTask ExecuteAsync(
         string parquetUrl,
         string sql,
-        ElementReference templateElement,
         ElementReference targetElement,
         CancellationToken cancellationToken = default);
 
@@ -36,7 +35,6 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
     public async ValueTask ExecuteAsync(
         string parquetUrl,
         string sql,
-        ElementReference templateElement,
         ElementReference targetElement,
         CancellationToken cancellationToken = default)
     {
@@ -65,7 +63,6 @@ public sealed class DuckDbQueryService : IDuckDbQueryService
             },
             parquetUrl,
             sql,
-            templateElement,
             targetElement);
     }
 
