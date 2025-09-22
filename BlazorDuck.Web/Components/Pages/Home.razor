@@ -42,7 +42,7 @@ else
         <button id="runQueryButton" class="btn btn-primary" @onclick="RunQueryAsync" disabled="@_isExecuting">
             @(_isExecuting ? "Running..." : "Run query")
         </button>
-        <button class="btn btn-outline-secondary" @onclick="ResetQuery" disabled="@_isExecuting">
+        <button class="btn btn-outline-secondary" @onclick="ResetQueryAsync" disabled="@_isExecuting">
             Reset
         </button>
     </div>
@@ -52,41 +52,16 @@ else
         <div class="alert alert-danger mt-3" role="alert">@_errorMessage</div>
     }
 
-    @if (_result.Columns.Count > 0)
-    {
-        <div class="table-responsive mt-4">
-            <table class="table table-striped table-sm align-middle">
-                <thead>
-                    <tr>
-                        @foreach (var column in _result.Columns)
-                        {
-                            <th scope="col">@column</th>
-                        }
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var row in _result.Rows)
-                    {
-                        <tr>
-                            @foreach (var value in row)
-                            {
-                                <td class="text-nowrap">@value</td>
-                            }
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+    <div class="table-responsive mt-4" @ref="_resultsHost"></div>
 }
 
 @code {
     private IReadOnlyList<ParquetFileDescriptor> _files = Array.Empty<ParquetFileDescriptor>();
-    private DuckDbQueryResult _result = DuckDbQueryResult.Empty;
     private string _selectedFile = string.Empty;
     private string _sql = "SELECT * FROM parquet_source LIMIT 10;";
     private bool _isExecuting;
     private string? _errorMessage;
+    private ElementReference _resultsHost;
 
     protected override async Task OnInitializedAsync()
     {
@@ -117,11 +92,11 @@ else
 
         try
         {
-            _result = await DuckDbQuery.ExecuteAsync(_selectedFile, _sql);
+            await DuckDbQuery.ExecuteAsync(_selectedFile, _sql, _resultsHost);
         }
         catch (Exception ex)
         {
-            _result = DuckDbQueryResult.Empty;
+            await DuckDbQuery.ClearResultsAsync(_resultsHost);
             _errorMessage = ex.Message;
         }
         finally
@@ -130,11 +105,11 @@ else
         }
     }
 
-    private void ResetQuery()
+    private async Task ResetQueryAsync()
     {
         _sql = "SELECT * FROM parquet_source LIMIT 10;";
-        _result = DuckDbQueryResult.Empty;
         _errorMessage = null;
+        await DuckDbQuery.ClearResultsAsync(_resultsHost);
     }
 
     private static string FormatSize(long bytes)

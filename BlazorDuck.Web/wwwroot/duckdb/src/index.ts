@@ -194,12 +194,12 @@ export async function executeQuery(
         ? result.schema.fields
         : [];
       const columns = schemaFields
-        .map((field) => field?.name ?? '')
-        .filter((name): name is string => Boolean(name));
+        .map((field: any) => field?.name ?? '')
+        .filter((name: any): name is string => Boolean(name));
 
       const rowValues: ReadonlyArray<ReadonlyArray<string>> = result
         .toArray()
-        .map((row: QueryRow) => columns.map((column) => toDisplayValue(row[column])));
+        .map((row: QueryRow) => columns.map((column: any) => toDisplayValue(row[column])));
 
       closeArrowTable(result);
 
