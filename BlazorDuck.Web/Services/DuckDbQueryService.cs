@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using BlazorDuck.Web.Configuration;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;

@@ -1,4 +1,3 @@
-using System;
 using BlazorDuck.Web.Components;
 using BlazorDuck.Web.Configuration;
 using BlazorDuck.Web.Services;
