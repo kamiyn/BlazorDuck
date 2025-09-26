@@ -145,7 +145,7 @@ else
 		{
 			try
 			{
-				await _resultApp.InvokeVoidAsync("unmount"); // no unmount method yet
+				await _resultApp.InvokeVoidAsync("unmount");
 			}
 			catch (OperationCanceledException) { }
 			catch (JSDisconnectedException) { }
