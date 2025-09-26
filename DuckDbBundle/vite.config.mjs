@@ -40,33 +40,37 @@ function copySourcesPlugin() {
   };
 }
 
-export default defineConfig({
-  plugins: [vue(), copySourcesPlugin()],
-  build: {
-    outDir: outputDirectory,
-    emptyOutDir: false,
-    lib: {
-      entry: resolve(currentDir, 'src/index.ts'),
-      formats: ['es'],
-      fileName: () => 'duckdb-browser-bundle.js'
-    },
-    sourcemap: true,
-    minify: 'esbuild',
-    rollupOptions: {
-      external: [],
-      output: {
-        manualChunks: undefined
+export default defineConfig(({ mode }) => {
+  const isDevelopment = mode === 'development';
+  console.log("isDevelopment", isDevelopment);
+  return {
+    plugins: [vue(), copySourcesPlugin()],
+    build: {
+      outDir: outputDirectory,
+      emptyOutDir: false,
+      lib: {
+        entry: resolve(currentDir, 'src/index.ts'),
+        formats: ['es'],
+        fileName: () => 'duckdb-browser-bundle.js'
+      },
+      sourcemap: isDevelopment,
+      minify: !isDevelopment,
+      rollupOptions: {
+        external: [],
+        output: {
+          manualChunks: undefined
+        }
       }
-    }
-  },
-  esbuild: {
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true
-  },
+    },
+    esbuild: {
+      minifyIdentifiers: true,
+      minifySyntax: true,
+      minifyWhitespace: true
+    },
     define: {
-    // ライブラリ内で 'process.env.NODE_ENV' などを参照している箇所を、
-    // ビルド時に空のオブジェクトに置き換えることでエラーを回避します。
-    'process.env': {}
-  }
+      // ライブラリ内で 'process.env.NODE_ENV' などを参照している箇所を、
+      // ビルド時に空のオブジェクトに置き換えることでエラーを回避します。
+      'process.env': {}
+    }
+  };
 });
