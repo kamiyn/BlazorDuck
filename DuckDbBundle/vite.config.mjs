@@ -46,7 +46,7 @@ export default defineConfig({
     outDir: outputDirectory,
     emptyOutDir: false,
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(currentDir, 'src/index.ts'),
       formats: ['es'],
       fileName: () => 'duckdb-browser-bundle.js'
     },
