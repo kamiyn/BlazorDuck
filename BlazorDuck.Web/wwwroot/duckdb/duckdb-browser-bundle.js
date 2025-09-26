@@ -5116,8 +5116,8 @@ function* Km(e) {
     do
       if ({ done: t, value: s } = Number.isNaN(o - a) ? l.next() : l.next(o - a), !t && s.byteLength > 0 && (i.push(s), a += s.byteLength), t || o <= a)
         do
-          ({ cmd: r, size: o } = yield c());
-        while (o < a);
+          ({ cmd: s, size: o } = yield l());
+        while (o < u);
     while (!t);
   } catch (u) {
     (n = !0) && typeof l.throw == "function" && l.throw(u);
@@ -8923,7 +8923,7 @@ class ct {
       this.offset + t,
       n,
       o,
-      c,
+      l,
       // Don't slice children if we have value offsets (the variable-width types)
       r.length === 0 || this.valueOffsets ? r : this._sliceChildren(r, a * t, a * n)
     );
@@ -9462,7 +9462,7 @@ class R {
       case h.Timestamp:
         switch (n.length) {
           case 0:
-            return new r();
+            return new s();
           case 1:
             return n[0].values.subarray(0, i * s);
           default:
@@ -10343,7 +10343,7 @@ class Ji extends Nv {
     return t ? xe(this._values)[0] : F(this, void 0, void 0, function* () {
       var n, i, s, r;
       const o = [];
-      let a = 0;
+      let u = 0;
       try {
         for (var c = !0, l = Wn(this), u; u = yield l.next(), n = u.done, !n; c = !0) {
           r = u.value, c = !1;
@@ -10648,7 +10648,7 @@ class ht extends Xc {
       const o = rs < i - r ? rs : i - r, a = new ht(new Uint32Array([Number.parseInt(t.slice(r, r + o), 10), 0])), c = new ht(new Uint32Array([Zc[o], 0]));
       s.times(c), s.plus(a), r += o;
     }
-    return s;
+    return n;
   }
   /** @nocollapse */
   static convertArray(t) {
@@ -13062,7 +13062,7 @@ class Zs extends $t {
           if (n) throw n.error;
         }
       }
-      return r;
+      return s;
     });
   }
   [Symbol.iterator]() {
@@ -15344,12 +15344,20 @@ async function B0(e, t, n) {
         columns: l,
         rows: u.map((d) => ({ values: d }))
       };
+      kd(n, p);
+      return;
     } finally {
-      await s.query("DROP VIEW IF EXISTS parquet_source;");
+      await o.query("DROP VIEW IF EXISTS parquet_source;");
     }
   } finally {
-    await s.close();
+    await o.close();
   }
+  function u(l) {
+    typeof l.close == "function" ? l.close() : typeof l.release == "function" && l.release();
+  }
+}
+function Hd(r) {
+  r && (r.innerHTML = "");
 }
 export {
   U0 as AsyncDuckDB,
@@ -15396,3 +15404,4 @@ export {
   E0 as loadDuckDb,
   H0 as selectBundle
 };
+//# sourceMappingURL=duckdb-browser-bundle.js.map

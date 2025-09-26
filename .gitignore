@@ -44,6 +44,8 @@ app.db
 app.db-shm
 app.db-wal
 
-BlazorDuck.Web/wwwroot/duckdb/*
-!BlazorDuck.Web/wwwroot/duckdb/duckdb-browser-bundle.js
-!BlazorDuck.Web/wwwroot/duckdb/README.txt
+# Download files
+BlazorDuck.Web/wwwroot/duckdb/duckdb-browser-coi.pthread.worker.js
+BlazorDuck.Web/wwwroot/duckdb/duckdb-browser-eh.worker.js
+BlazorDuck.Web/wwwroot/duckdb/duckdb-browser.mjs
+BlazorDuck.Web/wwwroot/duckdb/duckdb-eh.wasm

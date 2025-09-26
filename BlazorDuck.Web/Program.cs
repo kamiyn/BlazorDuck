@@ -1,4 +1,3 @@
-using System;
 using BlazorDuck.Web.Components;
 using BlazorDuck.Web.Configuration;
 using BlazorDuck.Web.Services;
@@ -42,7 +41,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+app.UseStatusCodePagesWithReExecute("/not-found");
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 

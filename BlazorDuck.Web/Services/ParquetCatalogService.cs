@@ -1,7 +1,4 @@
-using System.IO;
-using System.Linq;
 using BlazorDuck.Web.Models;
-using Microsoft.AspNetCore.Hosting;
 
 namespace BlazorDuck.Web.Services;
 
@@ -10,29 +7,22 @@ public interface IParquetCatalogService
     ValueTask<IReadOnlyList<ParquetFileDescriptor>> GetAvailableFilesAsync(CancellationToken cancellationToken = default);
 }
 
-public sealed class ParquetCatalogService : IParquetCatalogService
+public sealed class ParquetCatalogService(IWebHostEnvironment environment) : IParquetCatalogService
 {
-    private readonly IWebHostEnvironment _environment;
-
-    public ParquetCatalogService(IWebHostEnvironment environment)
-    {
-        _environment = environment;
-    }
-
     public ValueTask<IReadOnlyList<ParquetFileDescriptor>> GetAvailableFilesAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var webRoot = _environment.WebRootPath ?? string.Empty;
+        var webRoot = environment.WebRootPath;
         if (string.IsNullOrEmpty(webRoot))
         {
-            return ValueTask.FromResult<IReadOnlyList<ParquetFileDescriptor>>(Array.Empty<ParquetFileDescriptor>());
+            return ValueTask.FromResult<IReadOnlyList<ParquetFileDescriptor>>([]);
         }
 
         var dataDirectory = Path.Combine(webRoot, "data");
         if (!Directory.Exists(dataDirectory))
         {
-            return ValueTask.FromResult<IReadOnlyList<ParquetFileDescriptor>>(Array.Empty<ParquetFileDescriptor>());
+            return ValueTask.FromResult<IReadOnlyList<ParquetFileDescriptor>>([]);
         }
 
         var descriptors = Directory.EnumerateFiles(dataDirectory, "*.parquet", SearchOption.TopDirectoryOnly)

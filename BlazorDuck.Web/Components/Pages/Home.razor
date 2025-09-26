@@ -47,7 +47,7 @@ else
         <button id="runQueryButton" class="btn btn-primary" @onclick="RunQueryAsync" disabled="@_isExecuting">
             @(_isExecuting ? "Running..." : "Run query")
         </button>
-        <button class="btn btn-outline-secondary" @onclick="ResetQuery" disabled="@_isExecuting">
+        <button class="btn btn-outline-secondary" @onclick="ResetQueryAsync" disabled="@_isExecuting">
             Reset
         </button>
     </div>
