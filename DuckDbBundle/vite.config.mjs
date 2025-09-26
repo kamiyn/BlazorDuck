@@ -63,5 +63,10 @@ export default defineConfig({
     minifyIdentifiers: true,
     minifySyntax: true,
     minifyWhitespace: true
+  },
+    define: {
+    // ライブラリ内で 'process.env.NODE_ENV' などを参照している箇所を、
+    // ビルド時に空のオブジェクトに置き換えることでエラーを回避します。
+    'process.env': {}
   }
 });

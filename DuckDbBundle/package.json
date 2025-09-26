@@ -6,15 +6,15 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@duckdb/duckdb-wasm": "1.29.0",
-    "apache-arrow": "17.0.0",
-    "vue": "^3.5.13"
+    "@duckdb/duckdb-wasm": "1.30.0",
+    "apache-arrow": "21.0.0",
+    "vue": "^3.5.22"
   },
   "devDependencies": {
-    "@types/node": "^22.7.4",
-    "@vitejs/plugin-vue": "^5.1.4",
-    "typescript": "^5.6.3",
-    "vite": "^6.0.0",
-    "vue-tsc": "^2.1.10"
+    "@types/node": "^24.5.2",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7",
+    "vue-tsc": "^3.0.8"
   }
 }

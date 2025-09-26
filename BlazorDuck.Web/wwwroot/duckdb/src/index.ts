@@ -14,12 +14,7 @@ import type {
 const {
   AsyncDuckDB,
   AsyncDuckDBConnection,
-  AsyncDuckDBPreparedStatement,
-  AsyncDuckDBTable,
   ConsoleLogger,
-  FilesystemTable,
-  duckdbBundle,
-  duckdbBundles,
   selectBundle
 } = duckdb;
 
@@ -242,11 +237,7 @@ export async function executeQuery(
 
       const rowValues = result.toArray().map(row => columns.map(column => toDisplayValue(row[column])));
 
-      if (typeof result.close === 'function') {
-        result.close();
-      } else if (typeof result.release === 'function') {
-        result.release();
-      }
+      closeArrowTable(result);
 
       return {
         columns,
@@ -260,19 +251,22 @@ export async function executeQuery(
   }
 }
 
+function closeArrowTable(result: any) {
+  if (typeof result.close === 'function') {
+    result.close();
+  } else if (typeof result.release === 'function') {
+    result.release();
+  }
+}
+
 export {
   AsyncDuckDB,
   AsyncDuckDBConnection,
-  AsyncDuckDBPreparedStatement,
-  AsyncDuckDBTable,
   ConsoleLogger,
-  FilesystemTable,
   arrow,
-  duckdbBundle,
-  duckdbBundles,
   loadDuckDb,
   selectBundle
 };
 
 export type { DuckDbBundleConfig, DuckDbInstance, DuckDbQueryPayload, ResultAppHandle, ResultState } from './resultTypes';
-export * from '@duckdb/duckdb-wasm';
+// export * from '@duckdb/duckdb-wasm';
