@@ -46,7 +46,7 @@ async function loadDuckDb(config: DuckDbBundleConfig): Promise<DuckDbInstance> {
         ? `${config.bundleBasePath}/${config.pthreadWorker}`
         : null;
 
-      await db.instantiate(mainModuleUrl, pthreadWorkerUrl ?? undefined);
+      await db.instantiate(mainModuleUrl, pthreadWorkerUrl);
       return { loader, db, worker } satisfies DuckDbInstance;
     })();
   }
