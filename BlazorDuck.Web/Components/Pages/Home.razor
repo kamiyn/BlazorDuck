@@ -130,7 +130,7 @@ else
         }
     }
 
-    private async Task ResetQuery()
+    private async Task ResetQueryAsync()
     {
         _sql = DefaultSql;
         var resultApp = await EnsureResultAppAsync();

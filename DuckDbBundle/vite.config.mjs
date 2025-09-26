@@ -41,7 +41,7 @@ function copySourcesPlugin() {
 }
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), copySourcesPlugin()],
   build: {
     outDir: outputDirectory,
     emptyOutDir: false,
@@ -63,6 +63,5 @@ export default defineConfig({
     minifyIdentifiers: true,
     minifySyntax: true,
     minifyWhitespace: true
-  },
-  plugins: [copySourcesPlugin()]
+  }
 });
