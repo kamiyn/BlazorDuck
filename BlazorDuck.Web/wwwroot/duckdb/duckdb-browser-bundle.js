@@ -14174,7 +14174,7 @@ os.throughDOM = Cl;
 _r.throughDOM = xl;
 br.throughDOM = xl;
 mr.throughDOM = xl;
-const C0 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+const x0 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   AsyncByteQueue: Ji,
   AsyncByteStream: Zn,
@@ -15226,15 +15226,15 @@ const y0 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     n[i] = s;
   return n;
 }, S0 = /* @__PURE__ */ I0(w0, [["__scopeId", "data-v-e447421a"]]), {
-  AsyncDuckDB: x0,
-  AsyncDuckDBConnection: U0,
-  AsyncDuckDBPreparedStatement: V0,
-  AsyncDuckDBTable: P0,
-  ConsoleLogger: k0,
-  FilesystemTable: j0,
-  duckdbBundle: $0,
-  duckdbBundles: z0,
-  selectBundle: W0
+  AsyncDuckDB: U0,
+  AsyncDuckDBConnection: V0,
+  AsyncDuckDBPreparedStatement: P0,
+  AsyncDuckDBTable: k0,
+  ConsoleLogger: j0,
+  FilesystemTable: $0,
+  duckdbBundle: z0,
+  duckdbBundles: W0,
+  selectBundle: H0
 } = y0, Cs = {
   duckDbPromise: null,
   httpFsInitialized: !1
@@ -15269,46 +15269,65 @@ function D0(e) {
   return new URL(e, t).toString();
 }
 function T0(e) {
-  return Array.isArray(e) ? e.map((t) => (Array.isArray(t) ? t : Array.isArray(t == null ? void 0 : t.values) ? t.values : []).map((i) => String(i ?? ""))) : [];
+  return Array.isArray(e) ? e.map((t) => (Array.isArray(t == null ? void 0 : t.values) ? t.values : []).map((i) => String(i ?? ""))) : [];
 }
 function A0(e) {
   if (!e)
     throw new Error("A host element is required to mount the result application.");
   return e;
 }
-function H0(e) {
-  const t = A0(e), n = va.get(t);
-  if (n)
-    return n.handle;
-  t.innerHTML = "";
-  const i = No({
+function Y0(e, t) {
+  if (!t || typeof t.bundleBasePath != "string")
+    throw new Error("DuckDB configuration is required.");
+  const n = A0(e), i = va.get(n);
+  if (i)
+    return i.handle;
+  const s = {
+    bundleBasePath: t.bundleBasePath,
+    mainModule: t.mainModule,
+    mainWorker: t.mainWorker,
+    moduleLoader: t.moduleLoader,
+    pthreadWorker: t.pthreadWorker ?? null
+  };
+  n.innerHTML = "";
+  const r = No({
     columns: [],
     rows: [],
     error: "",
     isLoading: !1
-  }), s = cm(S0, { state: i });
-  s.mount(t);
-  const r = {
-    setResult(o) {
-      const a = Array.isArray(o == null ? void 0 : o.columns) ? o.columns.map((l) => String(l ?? "")).filter((l) => !!l) : [], c = T0(o == null ? void 0 : o.rows);
-      i.error = "", i.columns = a, i.rows = c, i.isLoading = !1;
+  }), o = cm(S0, { state: r });
+  o.mount(n);
+  const a = {
+    async runQuery(c, l) {
+      const u = typeof c == "string" ? c.trim() : "", d = typeof l == "string" ? l.trim() : "";
+      if (!u) {
+        r.error = "Select a parquet file to query.", r.columns = [], r.rows = [], r.isLoading = !1;
+        return;
+      }
+      if (!d) {
+        r.error = "Enter a SQL statement.", r.columns = [], r.rows = [], r.isLoading = !1;
+        return;
+      }
+      r.error = "", r.columns = [], r.rows = [], r.isLoading = !0;
+      try {
+        const y = await B0(s, u, d);
+        r.columns = Array.isArray(y.columns) ? [...y.columns] : [], r.rows = T0(y.rows);
+      } catch (y) {
+        r.error = y instanceof Error ? y.message : String(y ?? "");
+      } finally {
+        r.isLoading = !1;
+      }
     },
-    setError(o) {
-      i.error = o, i.columns = [], i.rows = [], i.isLoading = !1;
-    },
-    setLoading(o) {
-      i.isLoading = !!o;
-    },
-    clear() {
-      i.error = "", i.columns = [], i.rows = [], i.isLoading = !1;
+    reset() {
+      r.error = "", r.columns = [], r.rows = [], r.isLoading = !1;
     },
     unmount() {
-      s.unmount(), t.innerHTML = "", va.delete(t);
+      o.unmount(), n.innerHTML = "", va.delete(n);
     }
   };
-  return va.set(t, { app: s, handle: r }), r;
+  return va.set(n, { app: o, handle: a }), a;
 }
-async function Y0(e, t, n) {
+async function B0(e, t, n) {
   var r;
   if (!e)
     throw new Error("DuckDB configuration is required.");
@@ -15333,17 +15352,17 @@ async function Y0(e, t, n) {
   }
 }
 export {
-  x0 as AsyncDuckDB,
-  U0 as AsyncDuckDBConnection,
+  U0 as AsyncDuckDB,
+  V0 as AsyncDuckDBConnection,
   t0 as AsyncDuckDBDispatcher,
-  V0 as AsyncDuckDBPreparedStatement,
-  P0 as AsyncDuckDBTable,
+  P0 as AsyncDuckDBPreparedStatement,
+  k0 as AsyncDuckDBTable,
   Gp as AsyncPreparedStatement,
   Ul as AsyncResultStreamIterator,
-  k0 as ConsoleLogger,
+  j0 as ConsoleLogger,
   kp as DuckDBAccessMode,
   ey as DuckDBDataProtocol,
-  j0 as FilesystemTable,
+  $0 as FilesystemTable,
   Wp as LogEvent,
   $p as LogLevel,
   Hp as LogOrigin,
@@ -15359,12 +15378,12 @@ export {
   qp as WorkerRequestType,
   Jp as WorkerResponseType,
   st as WorkerTask,
-  C0 as arrow,
-  H0 as createResultApp,
+  x0 as arrow,
+  Y0 as createResultApp,
   h0 as createWorker,
-  $0 as duckdbBundle,
-  z0 as duckdbBundles,
-  Y0 as executeQuery,
+  z0 as duckdbBundle,
+  W0 as duckdbBundles,
+  B0 as executeQuery,
   u0 as getJsDelivrBundles,
   qw as getLogEventLabel,
   Gw as getLogLevelLabel,
@@ -15375,5 +15394,5 @@ export {
   kl as isNode,
   l0 as isSafari,
   E0 as loadDuckDb,
-  W0 as selectBundle
+  H0 as selectBundle
 };

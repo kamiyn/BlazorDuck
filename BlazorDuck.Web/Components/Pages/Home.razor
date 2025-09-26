@@ -2,12 +2,14 @@
 @rendermode InteractiveServer
 
 @using BlazorDuck.Web.Models
+@using BlazorDuck.Web.Configuration
 @using BlazorDuck.Web.Services
 @using Microsoft.JSInterop
+@using Microsoft.Extensions.Options
 @implements IAsyncDisposable
 
 @inject IParquetCatalogService ParquetCatalog
-@inject IDuckDbQueryService DuckDbQuery
+@inject IOptionsSnapshot<DuckDbWasmOptions> DuckDbOptions
 @inject IJSRuntime JSRuntime
 
 <PageTitle>DuckDB Explorer</PageTitle>
@@ -93,71 +95,38 @@ else
             _resultModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./duckdb/duckdb-browser-bundle.js");
         }
 
-        _resultApp = await _resultModule.InvokeAsync<IJSObjectReference>("createResultApp", _resultHost);
+        var options = DuckDbOptions.Value;
+        var config = new
+        {
+            bundleBasePath = options.BundleBasePath,
+            mainModule = options.MainModule,
+            mainWorker = options.MainWorker,
+            moduleLoader = options.ModuleLoader,
+            pthreadWorker = string.IsNullOrWhiteSpace(options.PthreadWorker) ? null : options.PthreadWorker
+        };
+
+        _resultApp = await _resultModule.InvokeAsync<IJSObjectReference>("createResultApp", _resultHost, config);
         return _resultApp;
     }
 
     private async Task RunQueryAsync()
     {
         var resultApp = await EnsureResultAppAsync();
-
-        if (string.IsNullOrWhiteSpace(_selectedFile))
+        if (resultApp is null)
         {
-            if (resultApp is not null)
-            {
-                await resultApp.InvokeVoidAsync("setError", "Select a parquet file to query.");
-            }
-
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(_sql))
-        {
-            if (resultApp is not null)
-            {
-                await resultApp.InvokeVoidAsync("setError", "Enter a SQL statement.");
-            }
-
             return;
         }
 
         _isExecuting = true;
         StateHasChanged();
 
-        if (resultApp is not null)
-        {
-            await resultApp.InvokeVoidAsync("setError", string.Empty);
-            await resultApp.InvokeVoidAsync("setLoading", true);
-        }
-
         try
         {
-            var result = await DuckDbQuery.ExecuteAsync(_selectedFile, _sql);
-            if (resultApp is not null)
-            {
-                var payload = new
-                {
-                    columns = CopyColumns(result.Columns),
-                    rows = CopyRows(result.Rows)
-                };
-
-                await resultApp.InvokeVoidAsync("setResult", payload);
-            }
-        }
-        catch (Exception ex)
-        {
-            if (resultApp is not null)
-            {
-                await resultApp.InvokeVoidAsync("setError", ex.Message);
-            }
+            await resultApp.InvokeVoidAsync("runQuery", _selectedFile, _sql);
         }
         finally
         {
             _isExecuting = false;
-            if (resultApp is not null)
-            {
-                await resultApp.InvokeVoidAsync("setLoading", false);
-            }
         }
     }
 
@@ -167,7 +136,7 @@ else
         var resultApp = await EnsureResultAppAsync();
         if (resultApp is not null)
         {
-            await resultApp.InvokeVoidAsync("clear");
+            await resultApp.InvokeVoidAsync("reset");
         }
     }
 
@@ -183,51 +152,6 @@ else
         {
             await _resultModule.DisposeAsync();
         }
-    }
-
-    private static string[] CopyColumns(IReadOnlyList<string> columns)
-    {
-        if (columns.Count == 0)
-        {
-            return Array.Empty<string>();
-        }
-
-        var buffer = new string[columns.Count];
-        for (var i = 0; i < columns.Count; i++)
-        {
-            buffer[i] = columns[i];
-        }
-
-        return buffer;
-    }
-
-    private static string[][] CopyRows(IReadOnlyList<IReadOnlyList<string>> rows)
-    {
-        if (rows.Count == 0)
-        {
-            return Array.Empty<string[]>();
-        }
-
-        var buffer = new string[rows.Count][];
-        for (var i = 0; i < rows.Count; i++)
-        {
-            var currentRow = rows[i];
-            if (currentRow.Count == 0)
-            {
-                buffer[i] = Array.Empty<string>();
-                continue;
-            }
-
-            var rowValues = new string[currentRow.Count];
-            for (var j = 0; j < currentRow.Count; j++)
-            {
-                rowValues[j] = currentRow[j];
-            }
-
-            buffer[i] = rowValues;
-        }
-
-        return buffer;
     }
 
     private static string FormatSize(long bytes)

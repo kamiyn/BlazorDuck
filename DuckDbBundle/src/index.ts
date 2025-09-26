@@ -8,7 +8,6 @@ import type {
   DuckDbInstance,
   DuckDbQueryPayload,
   ResultAppHandle,
-  ResultPayload,
   ResultState
 } from './resultTypes';
 
@@ -108,19 +107,14 @@ function resolveParquetUrl(parquetUrl: string): string {
   return new URL(parquetUrl, baseUrl).toString();
 }
 
-function cloneRowValues(rows: ResultPayload['rows']): string[][] {
+function cloneRowValues(rows: DuckDbQueryPayload['rows']): string[][] {
   if (!Array.isArray(rows)) {
     return [];
   }
 
-  return rows.map(item => {
-    const row = Array.isArray(item)
-      ? item
-      : Array.isArray(item?.values)
-        ? item.values
-        : [];
-
-    return row.map(value => String(value ?? ''));
+  return rows.map(row => {
+    const values = Array.isArray(row?.values) ? row.values : [];
+    return values.map(value => String(value ?? ''));
   });
 }
 
@@ -132,12 +126,27 @@ function ensureHostElement(element: Element | null | undefined): Element {
   return element;
 }
 
-export function createResultApp(element: Element | null | undefined): ResultAppHandle {
+export function createResultApp(
+  element: Element | null | undefined,
+  config: DuckDbBundleConfig
+): ResultAppHandle {
+  if (!config || typeof config.bundleBasePath !== 'string') {
+    throw new Error('DuckDB configuration is required.');
+  }
+
   const host = ensureHostElement(element);
   const existing = resultAppRegistry.get(host);
   if (existing) {
     return existing.handle;
   }
+
+  const resolvedConfig: DuckDbBundleConfig = {
+    bundleBasePath: config.bundleBasePath,
+    mainModule: config.mainModule,
+    mainWorker: config.mainWorker,
+    moduleLoader: config.moduleLoader,
+    pthreadWorker: config.pthreadWorker ?? null
+  };
 
   host.innerHTML = '';
   const state = reactive<ResultState>({
@@ -151,26 +160,42 @@ export function createResultApp(element: Element | null | undefined): ResultAppH
   app.mount(host);
 
   const handle: ResultAppHandle = {
-    setResult(result: ResultPayload) {
-      const columns = Array.isArray(result?.columns)
-        ? result.columns.map(value => String(value ?? '')).filter(name => Boolean(name))
-        : [];
-      const rows = cloneRowValues(result?.rows);
+    async runQuery(parquetUrl: string, sql: string) {
+      const source = typeof parquetUrl === 'string' ? parquetUrl.trim() : '';
+      const statement = typeof sql === 'string' ? sql.trim() : '';
+
+      if (!source) {
+        state.error = 'Select a parquet file to query.';
+        state.columns = [];
+        state.rows = [];
+        state.isLoading = false;
+        return;
+      }
+
+      if (!statement) {
+        state.error = 'Enter a SQL statement.';
+        state.columns = [];
+        state.rows = [];
+        state.isLoading = false;
+        return;
+      }
+
       state.error = '';
-      state.columns = columns;
-      state.rows = rows;
-      state.isLoading = false;
-    },
-    setError(message: string) {
-      state.error = message;
       state.columns = [];
       state.rows = [];
-      state.isLoading = false;
+      state.isLoading = true;
+
+      try {
+        const result = await executeQuery(resolvedConfig, source, statement);
+        state.columns = Array.isArray(result.columns) ? [...result.columns] : [];
+        state.rows = cloneRowValues(result.rows);
+      } catch (error) {
+        state.error = error instanceof Error ? error.message : String(error ?? '');
+      } finally {
+        state.isLoading = false;
+      }
     },
-    setLoading(isLoading: boolean) {
-      state.isLoading = Boolean(isLoading);
-    },
-    clear() {
+    reset() {
       state.error = '';
       state.columns = [];
       state.rows = [];
@@ -249,5 +274,5 @@ export {
   selectBundle
 };
 
-export type { DuckDbBundleConfig, DuckDbInstance, DuckDbQueryPayload, ResultAppHandle, ResultPayload, ResultState } from './resultTypes';
+export type { DuckDbBundleConfig, DuckDbInstance, DuckDbQueryPayload, ResultAppHandle, ResultState } from './resultTypes';
 export * from '@duckdb/duckdb-wasm';

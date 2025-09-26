@@ -21,24 +21,13 @@ export interface ResultState {
   isLoading: boolean;
 }
 
-export interface ResultRowPayload {
-  values?: ReadonlyArray<unknown>;
-}
-
-export interface ResultPayload {
-  columns?: ReadonlyArray<unknown>;
-  rows?: ReadonlyArray<ResultRowPayload | ReadonlyArray<unknown>>;
-}
-
 export interface DuckDbQueryPayload {
   columns: string[];
   rows: Array<{ values: string[] }>;
 }
 
 export interface ResultAppHandle {
-  setResult(result: ResultPayload): void;
-  setError(message: string): void;
-  setLoading(isLoading: boolean): void;
-  clear(): void;
+  runQuery(parquetUrl: string, sql: string): Promise<void>;
+  reset(): void;
   unmount(): void;
 }
