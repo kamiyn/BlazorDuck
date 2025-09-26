@@ -1,4 +1,4 @@
-namespace BlazorDuck.Web.Configuration;
+﻿namespace BlazorDuck.Web.Configuration;
 
 public sealed class DuckDbWasmOptions
 {

@@ -1,12 +1,8 @@
-using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;
-using System.Threading.Tasks;
+
 using Microsoft.Playwright;
-using Xunit;
 
 namespace BlazorDuck.E2E;
 
@@ -47,7 +43,7 @@ public sealed class E2EFixture : IAsyncLifetime
 
         await WaitForAppAsync(BaseUrl, TimeSpan.FromSeconds(45));
 
-        PlaywrightInstance = await Microsoft.Playwright.Playwright.CreateAsync();
+        PlaywrightInstance = await Playwright.CreateAsync();
         Browser = await PlaywrightInstance.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = true
@@ -97,7 +93,8 @@ public sealed class E2EFixture : IAsyncLifetime
 
     private static async Task WaitForAppAsync(string baseUrl, TimeSpan timeout)
     {
-        using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+        using var httpClient = new HttpClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(5);
         var deadline = DateTime.UtcNow + timeout;
 
         while (DateTime.UtcNow < deadline)
