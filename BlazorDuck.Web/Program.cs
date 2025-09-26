@@ -1,4 +1,4 @@
-using BlazorDuck.Web.Components;
+﻿using BlazorDuck.Web.Components;
 using BlazorDuck.Web.Configuration;
 using BlazorDuck.Web.Services;
 
@@ -6,7 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<DuckDbWasmOptions>(builder.Configuration.GetSection("DuckDbWasm"));
 builder.Services.AddSingleton<IParquetCatalogService, ParquetCatalogService>();
-builder.Services.AddScoped<IDuckDbQueryService, DuckDbQueryService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

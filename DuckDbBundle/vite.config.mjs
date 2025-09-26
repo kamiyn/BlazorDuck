@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { copyFile, mkdir, readdir, rm } from 'node:fs/promises';
@@ -40,6 +41,7 @@ function copySourcesPlugin() {
 }
 
 export default defineConfig({
+  plugins: [vue(), copySourcesPlugin()],
   build: {
     outDir: outputDirectory,
     emptyOutDir: false,
@@ -51,6 +53,7 @@ export default defineConfig({
     sourcemap: true,
     minify: 'esbuild',
     rollupOptions: {
+      external: [],
       output: {
         manualChunks: undefined
       }
@@ -61,5 +64,9 @@ export default defineConfig({
     minifySyntax: true,
     minifyWhitespace: true
   },
-  plugins: [copySourcesPlugin()]
+    define: {
+    // ライブラリ内で 'process.env.NODE_ENV' などを参照している箇所を、
+    // ビルド時に空のオブジェクトに置き換えることでエラーを回避します。
+    'process.env': {}
+  }
 });

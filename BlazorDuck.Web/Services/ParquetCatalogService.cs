@@ -1,4 +1,4 @@
-using BlazorDuck.Web.Models;
+﻿using BlazorDuck.Web.Models;
 
 namespace BlazorDuck.Web.Services;
 
