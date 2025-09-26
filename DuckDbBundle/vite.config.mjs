@@ -42,7 +42,6 @@ function copySourcesPlugin() {
 
 export default defineConfig(({ mode }) => {
   const isDevelopment = mode === 'development';
-  console.log("isDevelopment", isDevelopment);
   return {
     plugins: [vue(), copySourcesPlugin()],
     build: {
