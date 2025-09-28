@@ -45,4 +45,4 @@ app.db-shm
 app.db-wal
 
 # Download and build files
-BlazorDuck.Web/wwwroot/duckdb
+*/wwwroot/duckdb

@@ -8,43 +8,23 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DuckDbWasmVersion>1.29.0</DuckDbWasmVersion>
-    <DuckDbWasmBaseUrl>https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@$(DuckDbWasmVersion)/dist</DuckDbWasmBaseUrl>
-    <ApacheArrowVersion>17.0.0</ApacheArrowVersion>
     <DuckDbRuntimeDirectory>$(ProjectDir)wwwroot/duckdb</DuckDbRuntimeDirectory>
   </PropertyGroup>
 
   <ItemGroup>
-    <DuckDbAsset Include="$(DuckDbWasmBaseUrl)/duckdb-browser.mjs">
-      <DestinationFolder>$(DuckDbRuntimeDirectory)</DestinationFolder>
-      <DestinationFileName>duckdb-browser.mjs</DestinationFileName>
-    </DuckDbAsset>
-    <DuckDbAsset Include="$(DuckDbWasmBaseUrl)/duckdb-eh.wasm">
-      <DestinationFolder>$(DuckDbRuntimeDirectory)</DestinationFolder>
-      <DestinationFileName>duckdb-eh.wasm</DestinationFileName>
-    </DuckDbAsset>
-    <DuckDbAsset Include="$(DuckDbWasmBaseUrl)/duckdb-browser-eh.worker.js">
-      <DestinationFolder>$(DuckDbRuntimeDirectory)</DestinationFolder>
-      <DestinationFileName>duckdb-browser-eh.worker.js</DestinationFileName>
-    </DuckDbAsset>
-    <DuckDbAsset Include="$(DuckDbWasmBaseUrl)/duckdb-browser-coi.pthread.worker.js">
-      <DestinationFolder>$(DuckDbRuntimeDirectory)</DestinationFolder>
-      <DestinationFileName>duckdb-browser-coi.pthread.worker.js</DestinationFileName>
-    </DuckDbAsset>
+    <DuckDbRequiredAsset Include="$(DuckDbRuntimeDirectory)/duckdb-browser.mjs" />
+    <DuckDbRequiredAsset Include="$(DuckDbRuntimeDirectory)/duckdb-eh.wasm" />
+    <DuckDbRequiredAsset Include="$(DuckDbRuntimeDirectory)/duckdb-browser-eh.worker.js" />
+    <DuckDbRequiredAsset Include="$(DuckDbRuntimeDirectory)/duckdb-browser-coi.pthread.worker.js" />
   </ItemGroup>
 
-  <Target Name="EnsureDuckDbWasmAssets" BeforeTargets="BeforeBuild" Condition="'$(NoDuckDbDownload)' != 'true'">
+  <Target Name="VerifyDuckDbWasmAssets" BeforeTargets="BeforeBuild">
     <ItemGroup>
-      <DuckDbAssetToDownload Include="@(DuckDbAsset)" Condition="!Exists('%(DuckDbAsset.DestinationFolder)/%(DuckDbAsset.DestinationFileName)')" />
-      <DuckDbDirectories Include="%(DuckDbAssetToDownload.DestinationFolder)" />
+      <MissingDuckDbAsset Include="@(DuckDbRequiredAsset)" Condition="!Exists(%(DuckDbRequiredAsset.Identity))" />
     </ItemGroup>
 
-    <MakeDir Directories="@(DuckDbDirectories)" Condition="@(DuckDbDirectories) != ''" />
-
-    <DownloadFile SourceUrl="%(DuckDbAssetToDownload.Identity)"
-                  DestinationFileName="%(DuckDbAssetToDownload.DestinationFileName)"
-                  DestinationFolder="%(DuckDbAssetToDownload.DestinationFolder)"
-                  Condition="'%(DuckDbAssetToDownload.Identity)' != ''" />
+    <Error Text="DuckDB WASM assets are missing. Run 'npm run build' in the DuckDbBundle project. Missing: @(MissingDuckDbAsset-&gt;'%(Identity)', ', ')"
+           Condition="@(MissingDuckDbAsset) != ''" />
   </Target>
 
 </Project>
