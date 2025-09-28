@@ -10,7 +10,7 @@ public interface IParquetCatalogService
 /// <summary>
 /// wwwroot/data を利用する ParquetCatalogService
 /// </summary>
-/// <param name="environment"></param>
+/// <param name="environment">The web host environment used to locate the wwwroot/data directory.</param>
 public sealed class ParquetCatalogService(IWebHostEnvironment environment) : IParquetCatalogService
 {
     public ValueTask<IReadOnlyList<ParquetFileDescriptor>> GetAvailableFilesAsync(CancellationToken cancellationToken = default)
