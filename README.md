@@ -35,9 +35,9 @@ BlazorDuck is a .NET 10 Blazor Server application that lets you explore Parquet 
 - The UI creates a temporary DuckDB view named `parquet_source`. Your SQL can query this view directly, e.g. `SELECT * FROM parquet_source LIMIT 10;`.
 
 ## DuckDB WASM Assets
-- The `BlazorDuck.Web` project downloads the required DuckDB WASM files (`duckdb-browser.mjs`, `duckdb-eh.wasm`, and workers) during build via the `EnsureDuckDbWasmAssets` MSBuild target.
-- For offline builds, download the matching version (`1.29.0`) manually from the [DuckDB WASM releases](https://github.com/duckdb/duckdb-wasm/releases) and place the files under `BlazorDuck.Web/wwwroot/duckdb`. Set the MSBuild property `NoDuckDbDownload=true` to skip automatic downloads.
-- `DuckDbBundle/` contains a Vite project pinned to the same dependency versions. Run `npm install` and `npm run build` there if you need to regenerate the bundle.
+- Run `npm install` and `npm run build` inside `DuckDbBundle/` to download the DuckDB WASM files (`duckdb-browser.mjs`, `duckdb-eh.wasm`, and workers) and copy them into `BlazorDuck.Web/wwwroot/duckdb`.
+- The .NET project fails the build if these assets are missing; rerun the bundle build whenever you update `@duckdb/duckdb-wasm`.
+- For offline builds, download the matching `@duckdb/duckdb-wasm` version manually from the [DuckDB WASM releases](https://github.com/duckdb/duckdb-wasm/releases) and place the files under `BlazorDuck.Web/wwwroot/duckdb` before building.
 
 ## Testing
 - **Unit tests** (xUnit):
