@@ -5,7 +5,46 @@ import { fileURLToPath } from 'node:url';
 import { copyFile, mkdir, readdir, rm, readFile, writeFile } from 'node:fs/promises';
 
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
-const outputDirectory = resolve(currentDir, '../BlazorDuck.Web/wwwroot/duckdb');
+
+function consumeDuckDbOutputDirectoryArgument() {
+  const flag = '--duckdb-output';
+  const flagWithEquals = `${flag}=`;
+  for (let index = 0; index < process.argv.length; index += 1) {
+    const argument = process.argv[index];
+    if (argument.startsWith(flagWithEquals)) {
+      const value = argument.slice(flagWithEquals.length);
+      process.argv.splice(index, 1);
+      return value;
+    }
+
+    if (argument === flag) {
+      const nextValue = process.argv[index + 1];
+      if (!nextValue || nextValue.startsWith('-')) {
+        throw new Error(`Missing value for ${flag} argument.`);
+      }
+      process.argv.splice(index, 2);
+      return nextValue;
+    }
+  }
+
+  return undefined;
+}
+
+function resolveDuckDbOutputDirectory() {
+  const envValue = process.env.DUCKDB_OUTPUT_DIRECTORY;
+  if (envValue && envValue.trim().length > 0) {
+    return envValue;
+  }
+
+  const argumentValue = consumeDuckDbOutputDirectoryArgument();
+  if (argumentValue) {
+    return argumentValue;
+  }
+
+  return '../BlazorDuck.Web/wwwroot/duckdb';
+}
+
+const outputDirectory = resolve(currentDir, resolveDuckDbOutputDirectory());
 const sourceDirectory = resolve(currentDir, 'src');
 const duckDbPackageJsonPath = resolve(currentDir, 'node_modules/@duckdb/duckdb-wasm/package.json');
 const duckDbAssetFiles = Object.freeze([
