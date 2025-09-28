@@ -39,7 +39,7 @@
                                    Condition="!Exists(%(DuckDbRequiredAsset.Identity))" />
     </ItemGroup>
 
-    <Error Text="DuckDB WASM assets are missing after running 'npm run build. Missing: @(RemainingMissingDuckDbAsset-&gt;'%(Identity)', ', ')"
+    <Error Text="DuckDB WASM assets are missing after running 'npm run build'. Missing: @(RemainingMissingDuckDbAsset-&gt;'%(Identity)', ', ')"
            Condition="@(RemainingMissingDuckDbAsset) != ''" />
   </Target>
 
