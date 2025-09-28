@@ -30,8 +30,21 @@ function consumeDuckDbOutputDirectoryArgument() {
   return undefined;
 }
 
-const resolvedOutputDirectoryArgument = consumeDuckDbOutputDirectoryArgument();
-const outputDirectory = resolve(currentDir, resolvedOutputDirectoryArgument ?? '../BlazorDuck.Web/wwwroot/duckdb');
+function resolveDuckDbOutputDirectory() {
+  const envValue = process.env.DUCKDB_OUTPUT_DIRECTORY;
+  if (envValue && envValue.trim().length > 0) {
+    return envValue;
+  }
+
+  const argumentValue = consumeDuckDbOutputDirectoryArgument();
+  if (argumentValue) {
+    return argumentValue;
+  }
+
+  return '../BlazorDuck.Web/wwwroot/duckdb';
+}
+
+const outputDirectory = resolve(currentDir, resolveDuckDbOutputDirectory());
 const sourceDirectory = resolve(currentDir, 'src');
 const duckDbPackageJsonPath = resolve(currentDir, 'node_modules/@duckdb/duckdb-wasm/package.json');
 const duckDbAssetFiles = Object.freeze([

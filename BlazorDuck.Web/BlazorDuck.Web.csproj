@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DuckDbRuntimeDirectory>$(ProjectDir)wwwroot/duckdb</DuckDbRuntimeDirectory>
+    <DuckDbRuntimeDirectory>$([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', 'wwwroot', 'duckdb'))</DuckDbRuntimeDirectory>
+    <DuckDbRuntimeDirectoryFullPath>$([System.IO.Path]::GetFullPath('$(DuckDbRuntimeDirectory)'))</DuckDbRuntimeDirectoryFullPath>
     <DuckDbBundleDirectory>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '..', 'DuckDbBundle'))))</DuckDbBundleDirectory>
   </PropertyGroup>
 
@@ -26,14 +27,19 @@
 
     <Exec Condition="@(MissingDuckDbAsset) != ''"
           WorkingDirectory="$(DuckDbBundleDirectory)"
-          Command="npm run build -- --duckdb-output &quot;$(DuckDbRuntimeDirectory)&quot;" />
+          Command="npm install" />
+
+    <Exec Condition="@(MissingDuckDbAsset) != ''"
+          WorkingDirectory="$(DuckDbBundleDirectory)"
+          Command="npm run build"
+          EnvironmentVariables="DUCKDB_OUTPUT_DIRECTORY=$(DuckDbRuntimeDirectoryFullPath)" />
 
     <ItemGroup Condition="@(MissingDuckDbAsset) != ''">
       <RemainingMissingDuckDbAsset Include="@(DuckDbRequiredAsset)"
                                    Condition="!Exists(%(DuckDbRequiredAsset.Identity))" />
     </ItemGroup>
 
-    <Error Text="DuckDB WASM assets are missing after running 'npm run build -- --duckdb-output $(DuckDbRuntimeDirectory)'. Missing: @(RemainingMissingDuckDbAsset-&gt;'%(Identity)', ', ')"
+    <Error Text="DuckDB WASM assets are missing after running 'npm run build. Missing: @(RemainingMissingDuckDbAsset-&gt;'%(Identity)', ', ')"
            Condition="@(RemainingMissingDuckDbAsset) != ''" />
   </Target>
 
