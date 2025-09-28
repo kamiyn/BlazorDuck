@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <DuckDbRuntimeDirectory>$(ProjectDir)wwwroot/duckdb</DuckDbRuntimeDirectory>
-    <DuckDbBundleDirectory>$(MSBuildProjectDirectory)..$(DirectorySeparatorChar)DuckDbBundle</DuckDbBundleDirectory>
+    <DuckDbBundleDirectory>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '..', 'DuckDbBundle'))))</DuckDbBundleDirectory>
   </PropertyGroup>
 
   <ItemGroup>
