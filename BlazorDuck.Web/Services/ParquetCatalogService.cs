@@ -7,6 +7,10 @@ public interface IParquetCatalogService
     ValueTask<IReadOnlyList<ParquetFileDescriptor>> GetAvailableFilesAsync(CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// wwwroot/data を利用する ParquetCatalogService
+/// </summary>
+/// <param name="environment"></param>
 public sealed class ParquetCatalogService(IWebHostEnvironment environment) : IParquetCatalogService
 {
     public ValueTask<IReadOnlyList<ParquetFileDescriptor>> GetAvailableFilesAsync(CancellationToken cancellationToken = default)
