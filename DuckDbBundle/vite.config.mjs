@@ -16,7 +16,13 @@ const duckDbAssetFiles = Object.freeze([
 ]);
 
 async function downloadDuckDbAssets() {
-  const packageJson = JSON.parse(await readFile(duckDbPackageJsonPath, 'utf8'));
+  let packageJson;
+  try {
+    const packageJsonContent = await readFile(duckDbPackageJsonPath, 'utf8');
+    packageJson = JSON.parse(packageJsonContent);
+  } catch (err) {
+    throw new Error(`Failed to read or parse ${duckDbPackageJsonPath}: ${err.message}`);
+  }
   const baseUrl = new URL(`https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@${packageJson.version}/dist/`);
   await mkdir(outputDirectory, { recursive: true });
 
